@@ -1,46 +1,66 @@
 (() => {
 'use strict';
-const $=id=>document.getElementById(id);let renderer,scene,camera,world,initialized=false,flat=false,failed=false,callback,done=[],angle=-.08,zoom=1,drag=null,islands=[],labels=[],sparkles,wizard,ghost,raf;
-const positions=[[-4.1,0,3.5],[.2,.25,4],[4,.65,.4],[1.9,1,-3.8],[-3,.75,-3.3]];
-const flatPositions=[[19,37],[50,45],[27,64],[79,31],[51,22]];
-const texCache={};
-function texture(name){if(texCache[name])return texCache[name];const t=new THREE.TextureLoader().load(`assets/textures/${name}.webp`);t.colorSpace=THREE.SRGBColorSpace;texCache[name]=t;return t;}
-function mat(color,extra={}){return new THREE.MeshStandardMaterial({color,roughness:.93,...extra});}
-function mesh(geo,material,parent,x=0,y=0,z=0){const m=new THREE.Mesh(geo,material);m.position.set(x,y,z);parent.add(m);return m;}
-function glowTexture(){const c=document.createElement('canvas');c.width=c.height=64;const ctx=c.getContext('2d'),g=ctx.createRadialGradient(32,32,0,32,32,32);g.addColorStop(0,'rgba(255,230,161,1)');g.addColorStop(.2,'rgba(255,217,128,.7)');g.addColorStop(1,'rgba(255,204,128,0)');ctx.fillStyle=g;ctx.fillRect(0,0,64,64);return new THREE.CanvasTexture(c);}
-function tree(parent,x,z,scale=1){const t=new THREE.Group();t.position.set(x,.2,z);t.scale.setScalar(scale);parent.add(t);mesh(new THREE.CylinderGeometry(.06,.11,.7,6),mat('#7b6351'),t,0,.35,0);[.75,1.06,1.3].forEach((y,i)=>mesh(new THREE.ConeGeometry(.5-i*.11,.65,7),mat(['#365a50','#426b59','#56745f'][i]),t,0,y,0));}
-function init(cb,d){callback=cb;done=d;if(initialized)return;initialized=true;createLabels();try{
- const T=THREE;scene=new T.Scene();scene.fog=new T.FogExp2('#18343c',.025);camera=new T.PerspectiveCamera(35,1,.1,100);renderer=new T.WebGLRenderer({antialias:true,alpha:true});renderer.setPixelRatio(Math.min(devicePixelRatio,2));renderer.setClearColor(0x142e35,0);renderer.outputColorSpace=T.SRGBColorSpace;renderer.setSize(800,530);$('map-canvas').appendChild(renderer.domElement);scene.add(new T.HemisphereLight('#f4efd2','#33434d',2.3));let sun=new T.DirectionalLight('#ffdeb0',3);sun.position.set(-4,12,7);scene.add(sun);let rim=new T.DirectionalLight('#a4b5ef',2);rim.position.set(5,5,-9);scene.add(rim);world=new T.Group();scene.add(world);
- const glow=glowTexture();
- positions.forEach(([x,y,z],i)=>{const group=new T.Group();group.position.set(x,y,z);group.userData.index=i;world.add(group);
- mesh(new T.CylinderGeometry(1.85,1.12,1.35,7),mat('#64726a'),group,0,-.67,0);
- mesh(new T.ConeGeometry(1.13,1.8,7),mat('#536366'),group,0,-2.1,0).rotation.z=Math.PI;
- mesh(new T.CylinderGeometry(1.88,1.88,.18,40),mat('#889179'),group,0,.08,0);
- const ring=mesh(new T.TorusGeometry(1.74,.025,5,64),new T.MeshBasicMaterial({color:'#d8bd7a'}),group,0,.2,0);ring.rotation.x=-Math.PI/2;
- mesh(new T.BoxGeometry(2.5,2.25,.26),mat('#8f8b7b'),group,0,1.42,-.44);
- let picture=mesh(new T.PlaneGeometry(2.3,2.18),new T.MeshBasicMaterial({map:texture(C.levels[i].scene),side:T.DoubleSide}),group,0,1.45,-.285);picture.userData.index=i;
- for(const side of [-1,1]){mesh(new T.CylinderGeometry(.28,.34,2.5,9),mat('#8a8a7c'),group,side*1.32,1.43,-.35);mesh(new T.ConeGeometry(.45,1.1,9),mat(i%2?'#686178':'#376574'),group,side*1.32,3.23,-.35);mesh(new T.SphereGeometry(.075,8,8),mat('#e2ba66',{emissive:'#937333'}),group,side*1.32,3.83,-.35);}
- const roof=mesh(new T.ConeGeometry(1.9,1.1,4),mat(i%2?'#726880':'#446b77'),group,0,3.06,-.35);roof.rotation.y=Math.PI/4;roof.scale.z=.58;
- for(let k=0;k<3;k++)mesh(new T.BoxGeometry(1.6,.16,.5),mat('#aa9d82'),group,0,.18+k*.13,.85-k*.3);
- tree(group,-1.3,.6,.7);tree(group,1.15,1,.45);
- let lantern=mesh(new T.OctahedronGeometry(.15),new T.MeshStandardMaterial({color:'#f4d087',emissive:'#e5b254',emissiveIntensity:2}),group,-.95,.65,1.15);
- let glowSprite=new T.Sprite(new T.SpriteMaterial({map:glow,transparent:true,depthWrite:false}));glowSprite.position.copy(lantern.position);glowSprite.scale.set(1,1,1);group.add(glowSprite);
- islands.push({group,ring,picture,lantern,glow:glowSprite});
- });
- for(let i=0;i<4;i++){const a=new T.Vector3(...positions[i]),b=new T.Vector3(...positions[i+1]);a.y+=.05;b.y+=.05;const direction=b.clone().sub(a),length=direction.length();for(let j=0;j<14;j++){let t=j/13;if(t<.24||t>.76)continue;let p=a.clone().lerp(b,t);p.y+=Math.sin(t*Math.PI)*.26;let step=mesh(new T.BoxGeometry(.7,.13,length/14*.8),mat('#af9d77'),world,p.x,p.y,p.z);step.rotation.y=Math.atan2(direction.x,direction.z);}}
- wizard=new T.Sprite(new T.SpriteMaterial({map:texture('wizard'),transparent:true,depthWrite:false}));wizard.scale.set(1.6,1.6,1);world.add(wizard);
- ghost=new T.Sprite(new T.SpriteMaterial({map:texture('ghost'),transparent:true,depthWrite:false}));ghost.scale.set(1.15,1.15,1);ghost.position.set(0,4,-1);world.add(ghost);
- const pts=new Float32Array(160*3);for(let i=0;i<160;i++){pts[i*3]=(Math.random()-.5)*22;pts[i*3+1]=Math.random()*9-2;pts[i*3+2]=(Math.random()-.5)*18;}const geometry=new T.BufferGeometry();geometry.setAttribute('position',new T.BufferAttribute(pts,3));sparkles=new T.Points(geometry,new T.PointsMaterial({color:'#efd899',size:.075,map:glow,transparent:true,depthWrite:false}));scene.add(sparkles);
- const canvas=renderer.domElement;canvas.addEventListener('pointerdown',e=>{drag={x:e.clientX,y:e.clientY,start:angle,moved:false,pointer:e.pointerId};canvas.setPointerCapture(e.pointerId);});canvas.addEventListener('pointermove',e=>{if(drag){let dx=e.clientX-drag.x;if(Math.abs(dx)>6)drag.moved=true;angle=drag.start+dx*.006;}});canvas.addEventListener('pointercancel',()=>drag=null);canvas.addEventListener('pointerup',e=>{if(drag&&!drag.moved){const r=canvas.getBoundingClientRect(),mouse=new T.Vector2((e.clientX-r.left)/r.width*2-1,-((e.clientY-r.top)/r.height)*2+1),ray=new T.Raycaster();ray.setFromCamera(mouse,camera);let hits=ray.intersectObjects(islands.map(i=>i.group),true);if(hits.length){let o=hits[0].object;while(o&&o.userData.index===undefined)o=o.parent;if(o)callback(o.userData.index);}}drag=null;});
- window.addEventListener('resize',resize);new ResizeObserver(resize).observe($('map-stage'));update(done);resize();animate();
- }catch(e){failed=true;flat=true;$('map-canvas').classList.add('hidden');$('map-flat').classList.remove('hidden');$('map-instruction').textContent='目前使用繪本地圖 · 點選標記進入關卡';$('view-btn').textContent='繪本地圖模式';$('view-btn').disabled=true;positionLabels();}
- $('view-btn').onclick=()=>{flat=!flat;$('map-canvas').classList.toggle('hidden',flat);$('map-flat').classList.toggle('hidden',!flat);$('view-btn').textContent=flat?'切換 3D 地圖':'切換繪本地圖';$('map-instruction').textContent=flat?'點選關卡標記，進入下一道試煉':'拖曳旋轉地圖 · 點選發光關卡';positionLabels();};$('reset-camera').onclick=()=>{angle=-.08;zoom=1;resize();};$('zoom-in').onclick=()=>{zoom=Math.min(1.45,zoom+.12);resize();};$('zoom-out').onclick=()=>{zoom=Math.max(.75,zoom-.12);resize();};
+const $=id=>document.getElementById(id),C=window.GAME_CONTENT;
+// Hotspots follow the illustration's intrinsic proportions, never a cropped background.
+const spots=[{x:20,y:34,w:29,h:23},{x:52,y:46,w:23,h:16},{x:28,y:65,w:34,h:23},{x:83,y:31,w:28,h:37},{x:52,y:20,w:27,h:27}];
+let renderer,scene,camera,walker,body,legs=[],arms=[],hat,labels=[],done=[],callback,ready=false,travel=null,last=0,position={x:63,y:75},pending=null;
+const reduced=()=>matchMedia('(prefers-reduced-motion: reduce)').matches;
+function material(color){return new THREE.MeshStandardMaterial({color,roughness:.88});}
+function add(geo,color,parent,x=0,y=0,z=0){const m=new THREE.Mesh(geo,material(color));m.position.set(x,y,z);parent.add(m);return m;}
+function makeWizard(){const T=THREE;walker=new T.Group();scene.add(walker);body=new T.Group();walker.add(body);
+ for(let i=0;i<7;i++){const a=i*2.4;const ornament=add(new T.OctahedronGeometry(.075),'#e3c071',body,Math.sin(a)*.44,1.3+i*.12,Math.cos(a)*.48);ornament.scale.z=.35;}
+ const shadow=add(new T.CircleGeometry(1.05,32),'#253b34',walker,0,.02,0);shadow.rotation.x=-Math.PI/2;shadow.material.transparent=true;shadow.material.opacity=.22;
+ add(new T.ConeGeometry(.69,1.6,20),'#254b6b',body,0,1.6,0); // dimensional robe
+ add(new T.ConeGeometry(.77,1.45,20,1,true),'#294c76',body,0,1.75,-.14);
+ add(new T.CylinderGeometry(.43,.46,.16,16),'#d5b366',body,0,1.35,0);
+ add(new T.SphereGeometry(.51,24,16),'#f4d1ad',body,0,2.65,0);
+ const hair=add(new T.SphereGeometry(.53,24,16,0,Math.PI*2,0,Math.PI*.53),'#714930',body,0,2.71,0);
+ for(const x of [-.18,.18]){add(new T.SphereGeometry(.048,12,8),'#243438',body,x,2.68,.47);add(new T.SphereGeometry(.085,12,8),'#e4a795',body,x*1.5,2.5,.42);}
+ hat=new T.Group();hat.position.set(0,3.05,0);body.add(hat);
+ add(new T.CylinderGeometry(.96,.96,.075,28),'#254966',hat);
+ const top=add(new T.ConeGeometry(.62,1.45,24),'#315978',hat,-.08,.66,0);top.rotation.z=.16;
+ add(new T.CylinderGeometry(.59,.65,.14,24),'#c9a35c',hat,0,.1,0);
+ add(new T.OctahedronGeometry(.13),'#ffe1a0',hat,0,.25,.53);
+ for(const side of [-1,1]){
+  const leg=new T.Group();leg.position.set(side*.27,1.02,0);body.add(leg);legs.push(leg);
+  add(new T.CylinderGeometry(.15,.13,.65,12),'#796047',leg,0,-.25,0);
+  const boot=add(new T.SphereGeometry(.23,16,10),'#634533',leg,0,-.58,.11);boot.scale.set(.85,.8,1.55);
+  const arm=new T.Group();arm.position.set(side*.48,2.16,0);body.add(arm);arms.push(arm);
+  const sleeve=add(new T.CylinderGeometry(.23,.15,.68,12),'#e9d9ad',arm,side*.14,-.23,0);sleeve.rotation.z=side*.25;
+  add(new T.SphereGeometry(.16,16,10),'#f4d1ad',arm,side*.22,-.55,.03);
+ }
+ const lantern=new T.Group();lantern.position.set(-.22,-.95,.1);arms[0].add(lantern);
+ const ring=add(new T.TorusGeometry(.16,.035,8,16),'#d3a652',lantern,0,.35,0);
+ const gem=add(new T.OctahedronGeometry(.32),'#ffe5a0',lantern);gem.material.emissive.set('#ffce62');gem.material.emissiveIntensity=1.4;
+ const frame=new T.LineSegments(new T.EdgesGeometry(new T.OctahedronGeometry(.36)),new T.LineBasicMaterial({color:'#a37d39'}));lantern.add(frame);
+ lantern.add(new T.PointLight('#ffcc77',2,7));
+ walker.scale.setScalar(3);walker.rotation.y=.25;
 }
-const C=window.GAME_CONTENT;
-function createLabels(){labels=C.levels.map((l,i)=>{const b=document.createElement('button');b.className='map-label';b.onclick=()=>callback(i);$('map-labels').appendChild(b);return b;});update(done);}
-function update(d){done=[...d];labels.forEach((b,i)=>{b.textContent=`${done.includes(i)?'✓':String(i+1).padStart(2,'0')}　${C.levels[i].name}`;b.disabled=i>done.length;b.classList.toggle('available',i===done.length);b.classList.toggle('done',done.includes(i));});islands.forEach((is,i)=>{is.ring.material.color.set(done.includes(i)?'#9fcda4':i===done.length?'#ffde85':'#5f8284');is.glow.visible=i<=done.length;});if(wizard){let p=positions[Math.min(4,done.length)];wizard.position.set(p[0]+.9,p[1]+1,p[2]+1.6);}}
-function resize(){if(!renderer||!camera)return;const w=$('map-stage').clientWidth,h=$('map-stage').clientHeight;if(!w||!h)return;renderer.setSize(w,h);camera.aspect=w/h;const dist=(w/h<1?25:20)/zoom;camera.position.set(dist*.45,dist*.65,dist*.83);camera.lookAt(0,.4,0);camera.updateProjectionMatrix();positionLabels();}
-function positionLabels(){const w=$('map-stage').clientWidth,h=$('map-stage').clientHeight;labels.forEach((b,i)=>{if(flat||failed){b.style.left=flatPositions[i][0]+'%';b.style.top=flatPositions[i][1]+'%';}else if(camera&&islands[i]){const v=islands[i].group.localToWorld(new THREE.Vector3(0,-.12,1.3));v.project(camera);b.style.left=Math.max(70,Math.min(w-70,(v.x*.5+.5)*w))+'px';b.style.top=Math.max(30,Math.min(h-50,(-v.y*.5+.5)*h))+'px';}});}
-function animate(time=0){raf=requestAnimationFrame(animate);if(document.hidden||$('adventure').classList.contains('hidden')||flat)return;world.rotation.y=angle;if(!matchMedia('(prefers-reduced-motion: reduce)').matches){ghost.position.y=4+Math.sin(time*.001)*.35;sparkles.rotation.y=time*.000015;islands.forEach((is,i)=>is.lantern.rotation.y=time*.001+i);}world.updateMatrixWorld();positionLabels();renderer.render(scene,camera);}
+function choose(i){
+ if(travel)pending=null;
+ const end={x:spots[i].x,y:spots[i].y+spots[i].h/2-1};
+ if(!renderer||reduced()){position=end;callback(i);return;}
+ const distance=Math.hypot(end.x-position.x,end.y-position.y);
+ travel={from:{...position},to:end,start:performance.now(),duration:Math.max(700,Math.min(2400,distance*45)),index:i};
+ $('map-instruction').textContent='星燈小魔法師正在前往'+C.levels[i].name+'…';
+}
+function init(cb,d){callback=cb;done=d;if(ready)return;ready=true;
+ $('map-flat').classList.remove('hidden');
+ labels=spots.map((s,i)=>{const b=document.createElement('button');b.className='academy-hotspot';b.dataset.room=i;b.style.cssText=`left:${s.x}%;top:${s.y}%;width:${s.w}%;height:${s.h}%`;b.innerHTML=`<span class="hotspot-label"></span>`;b.onclick=()=>choose(i);$('map-labels').appendChild(b);return b;});update(done);
+ try{const T=THREE;renderer=new T.WebGLRenderer({alpha:true,antialias:true});renderer.setPixelRatio(Math.min(devicePixelRatio,2));renderer.setClearColor(0,0);renderer.outputColorSpace=T.SRGBColorSpace;$('map-canvas').appendChild(renderer.domElement);renderer.domElement.setAttribute('aria-hidden','true');scene=new T.Scene();camera=new T.OrthographicCamera(-50,50,50,-50,.1,300);camera.position.set(0,90,120);camera.lookAt(0,0,0);scene.add(new T.HemisphereLight('#fff1ce','#60758b',2.7));const light=new T.DirectionalLight('#fff1d0',3);light.position.set(-20,80,70);scene.add(light);makeWizard();resize();requestAnimationFrame(tick);
+ }catch(e){renderer=null;$('map-canvas').innerHTML='<img class="fallback-wizard" src="assets/characters/wizard.webp" alt="提燈的小魔法師">';}
+ new ResizeObserver(resize).observe($('map-stage'));window.addEventListener('resize',resize);
+}
+function update(d){done=[...d];labels.forEach((b,i)=>{b.classList.toggle('done',done.includes(i));b.setAttribute('aria-label',`${C.levels[i].name}${done.includes(i)?'，已完成':'，開始挑戰'}`);b.querySelector('span').textContent=`${done.includes(i)?'✓':String(i+1).padStart(2,'0')} ${C.levels[i].name}`;});}
+function resize(){if(!renderer)return;const w=$('map-stage').clientWidth,h=$('map-stage').clientHeight;if(!w||!h)return;renderer.setSize(w,h);if(walker)walker.scale.setScalar(w<500?3.7:3);camera.left=-50;camera.right=50;camera.top=50*h/w;camera.bottom=-50*h/w;camera.updateProjectionMatrix();}
+function tick(t){requestAnimationFrame(tick);if(document.hidden||$('adventure').classList.contains('hidden'))return;
+ let walking=!!travel;
+ if(travel){const k=Math.min(1,(t-travel.start)/travel.duration);position.x=travel.from.x+(travel.to.x-travel.from.x)*k;position.y=travel.from.y+(travel.to.y-travel.from.y)*k;walker.rotation.y=Math.atan2(travel.to.x-travel.from.x,(travel.to.y-travel.from.y)*1.25);if(k===1){pending=travel.index;travel=null;walking=false;}}
+ // Unproject image coordinates onto a plane facing the camera, with feet on the illustration.
+ const v=new THREE.Vector3(position.x/50-1,1-position.y/50,0).unproject(camera);walker.position.copy(v);
+ const phase=t*.012;legs.forEach((l,i)=>l.rotation.x=walking?Math.sin(phase+i*Math.PI)*.65:0);arms.forEach((a,i)=>a.rotation.x=walking?Math.sin(phase+i*Math.PI+Math.PI)*.38:0);body.position.y=walking?Math.abs(Math.sin(phase))*.12:0;hat.rotation.z=walking?Math.sin(phase)*.035:0;
+ renderer.render(scene,camera);
+ if(pending!==null){const i=pending;pending=null;$('map-instruction').textContent='自由選關 · 點選建築，跟著星燈出發';callback(i);}
+}
 window.AcademyMap={init,update,resize};
 })();
