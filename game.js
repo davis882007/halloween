@@ -22,6 +22,7 @@ function closeDialog(id){$(id).close();if(!document.querySelector('dialog[open]'
 document.querySelectorAll('dialog').forEach(d=>d.addEventListener('close',()=>{if(!document.querySelector('dialog[open]'))document.body.classList.remove('no-scroll');if(d.id==='final-dialog')clearEnding();}));
 function renderProgress(){
  const n=state.done.length;
+ $('teacher-btn').disabled=n<5;$('teacher-lock-note').textContent=n<5?`點亮五盞燈後開啟（${n} / 5）`:'五盞燈已點亮，教師筆記已開放';
  $('start-btn').innerHTML=(n?'繼續星光旅程':'提起星燈，開始冒險')+' <span>↗</span>';
  $('save-note').textContent=storageOK?(n?`已找回 ${n} / 5 枚靈魂之光 · 進度已儲存`:'五個關卡 · 自動記錄進度 · 不限時間'):'目前無法儲存進度 · 請保持此分頁開啟';
  $('chapter-cards').innerHTML=C.levels.map((l,i)=>`<button class="chapter-card ${state.done.includes(i)?'done':''}" data-level="${i}" aria-label="第${i+1}關 ${l.name}"><span class="chapter-no">0${i+1}${state.done.includes(i)?' · 已點亮':''}</span><b>${l.name}</b><small>${l.short}</small></button>`).join('');
@@ -37,16 +38,21 @@ function renderProgress(){
 function start(){ const name=$('player-name').value.trim();if(!name){$('welcome').classList.remove('hidden');$('adventure').classList.add('hidden');$('player-name').focus();$('player-name').reportValidity();toast('請先輸入勇者的姓名或暱稱。');return false;}state.name=name;save();$('toast').classList.add('hidden');playBackgroundMusic();$('welcome').classList.add('hidden');$('adventure').classList.remove('hidden');if(!mapReady){mapReady=true;window.AcademyMap?.init(enterRoom,state.done);}window.AcademyMap?.resize();window.scrollTo({top:0,behavior:'smooth'});return true;}
 $('player-name').addEventListener('keydown',e=>{if(e.key==='Enter'){e.preventDefault();start();}});
 $('start-btn').onclick=start;$('next-btn').onclick=()=>state.done.length<5?enterRoom(C.levels.findIndex((_,i)=>!state.done.includes(i))):openFinal();
-$('home').onclick=e=>{e.preventDefault();$('welcome').classList.remove('hidden');$('adventure').classList.add('hidden');window.scrollTo(0,0);};
+$('home').onclick=e=>{e.preventDefault();window.AcademyMap?.cancelTravel();$('welcome').classList.remove('hidden');$('adventure').classList.add('hidden');window.scrollTo(0,0);};
 $('sound-btn').onclick=()=>{sound=!sound;$('sound-btn').textContent=`音效：${sound?'開':'關'}`;$('sound-btn').setAttribute('aria-pressed',sound);chime();};
 $('close-room').onclick=()=>closeDialog('room-dialog');$('close-info').onclick=()=>closeDialog('info-dialog');$('close-final').onclick=()=>closeDialog('final-dialog');
 function info(html){$('info-body').innerHTML=html;openDialog('info-dialog');}
-$('story-btn').onclick=()=>info(`<p class="eyebrow">AN INVITATION FROM DUSKWOOD</p><h2>歡迎來到暮夜學院</h2><p>${C.intro}</p><p>古老的大門在身後輕輕闔上。一位幽靈學者留下謎語：「五個空間，五道試煉。唯有集齊靈魂之光，方可打開離去之門。」</p><p>今晚沒有倒數催促，只有一步一步的發現。思考的時間，也是一種魔法。</p><button class="primary" id="story-start">我準備好了 <span>→</span></button>`);
-$('info-body').addEventListener('click',e=>{if(e.target.closest('#story-start')){closeDialog('info-dialog');start();}if(e.target.closest('#confirm-reset')){state={done:[],hints:[0,0,0,0,0],drafts:['','','','',''],finished:false,name:'',completedAt:''};save();renderProgress();closeDialog('info-dialog');$('player-name').value='';$('home').click();toast('請為新的冒險輸入姓名。');}if(e.target.closest('#reset-request')){infoReset();}});
+function showIntroduction(){info(`<p class="eyebrow">AN INVITATION FROM DUSKWOOD</p><h2>萬聖夜，故事開始了</h2><img class="intro-window-art" src="assets/backgrounds/academy-map.webp" alt="星光下的暮夜學院"><h3>萬聖節的由來</h3><p>萬聖節（Halloween）的起源，與古老凱爾特人的薩溫節（Samhain）有關。人們在秋收結束、冬季將至時舉行慶典；傳說在這個時節，人間與靈界的界線變得薄弱，因此會燃起營火、穿戴特殊裝扮。</p><p>後來，這些習俗與基督宗教的諸聖節前夕融合，逐漸演變成今天的萬聖節。如今，人們在 10 月 31 日裝扮角色、製作南瓜燈，也玩「不給糖就搗蛋」和各種闖關遊戲。</p><h3>暮夜學院的故事</h3><p>${C.intro}</p><p>你與朋友踏進學院，古老的大門在身後輕輕闔上。一位幽靈學者留下謎語：「五個空間，五道試煉。唯有集齊靈魂之光，方可打開離去之門。」</p><p>提起星燈，自由挑選想挑戰的房間。這場冒險沒有倒數催促，只有觀察、推理與勇氣；思考的時間，也是一種魔法。</p><button class="primary" id="story-start">收下邀請函，準備出發 <span>→</span></button>`);}
+$('story-btn').onclick=showIntroduction;
+$('restart-btn').onclick=()=>{window.AcademyMap?.cancelTravel();infoReset();};
+$('info-body').addEventListener('click',e=>{if(e.target.closest('#story-start')){closeDialog('info-dialog');$('player-name').focus();}if(e.target.closest('#cancel-reset'))closeDialog('info-dialog');if(e.target.closest('#confirm-reset')){clearEnding();window.AcademyMap?.cancelTravel();state={done:[],hints:[0,0,0,0,0],drafts:['','','','',''],finished:false,name:'',completedAt:''};save();renderProgress();closeDialog('info-dialog');$('player-name').value='';$('home').click();toast('請為新的冒險輸入姓名。');}if(e.target.closest('#reset-request')){infoReset();}});
 $('help-btn').onclick=()=>info('<p class="eyebrow">HOW TO EXPLORE</p><h2>一盞星燈，就能出發</h2><ol><li>點選「開始冒險」，再點地圖上的發光關卡。</li><li>五個關卡可以任意挑選。點選地圖建築，小魔法師會提燈走向目的地；也可以直接用下方關卡卡片進入。</li><li>每關都有三段提示。答錯可以再試，沒有時間限制，也不扣分。</li><li>通關後獲得一枚靈魂之光；冒險手札會記錄解題方法。</li><li>五關完成後，依序點選碎片排成代表「魔法」的英文單字，觀看最後的結局動畫。</li></ol><p>進度儲存在目前的瀏覽器。更換裝置或清除瀏覽資料不會保留進度。若使用私密模式，請在關閉分頁前完成。</p><p>電腦也可以用 Tab 選按鈕、Enter 確認、Esc 關閉視窗。背景音樂會在開始冒險後持續循環播放，可用右上角「音樂」按鈕暫停或繼續。音效另外控制，預設關閉。</p>');
 $('journal-btn').onclick=()=>info(`<p class="eyebrow">YOUR FIELD NOTES</p><h2>冒險手札</h2><p>已找到 ${state.done.length} / 5 枚靈魂之光。</p>${C.levels.map((l,i)=>`<div class="journal-entry"><h3>0${i+1}　${l.name}</h3><p>${state.done.includes(i)?`靈魂之光 ${l.letter} 已點亮。<br>${l.explanation}`:'這一頁還在等待你的發現。'}</p></div>`).join('')}`);
-$('teacher-btn').onclick=()=>info(`<p class="eyebrow">TEACHER'S NOTE</p><h2>陪孩子一起，找到規律</h2><p>依上傳的五關資料製作。第二關顯示四個角度，0°、90°、180° 可操作，270° 由玩家推理；第五關保留同色篩選，只有紅色提供疊合觀察。獎勵順序為 I、C、G、M、A，最後由玩家排列出魔法單字。</p>${C.levels.map((l,i)=>`<details><summary>第 ${i+1} 關｜${l.short}・展開解答</summary><p>${l.explanation}</p></details>`).join('')}<details><summary>角色與美術設定</summary><p>星燈小魔法師：藍綠尖帽、金色星紋披風、星形提燈。幽靈伙伴：象牙白身體、淡紫圍巾。全套以繪圖模型繪製彩鉛奇幻素材。</p><img class="design-sheet" src="assets/characters/character-design.webp" alt="角色設定圖"></details><p><small>題目與數值保留可編輯文字；素材已套用於遊戲。3D 地圖採用 Three.js。</small></p><div class="reset-warning"><p>清除目前瀏覽器的闖關記錄，重新開始。</p><button id="reset-request" class="quiet">重設遊戲進度</button></div>`);
-function infoReset(){ $('info-body').innerHTML='<p class="eyebrow">START A NEW JOURNEY</p><h2>重新開始這場冒險？</h2><p>將清除目前瀏覽器的五關記錄、提示與靈魂之光。這個動作無法復原。</p><button id="confirm-reset" class="primary">確定清除，重新開始</button>'; }
+$('teacher-btn').onclick=()=>{if(state.done.length<5){toast('點亮五盞燈後，才能開啟教師筆記。');return;}info(`<p class="eyebrow">TEACHER'S NOTE</p><h2>陪孩子一起，找到規律</h2><p>依上傳的五關資料製作。第二關顯示四個角度，0°、90°、180° 可操作，270° 由玩家推理；第五關保留同色篩選，只有紅色提供疊合觀察。獎勵順序為 I、C、G、M、A，最後由玩家排列出魔法單字。</p>${C.levels.map((l,i)=>`<details><summary>第 ${i+1} 關｜${l.short}・展開解答</summary><p>${l.explanation}</p></details>`).join('')}<details><summary>角色與美術設定</summary><p>星燈小魔法師：藍綠尖帽、金色星紋披風、星形提燈。幽靈伙伴：象牙白身體、淡紫圍巾。全套以繪圖模型繪製彩鉛奇幻素材。</p><img class="design-sheet" src="assets/characters/character-design.webp" alt="角色設定圖"></details><p><small>題目與數值保留可編輯文字；素材已套用於遊戲。3D 地圖採用 Three.js。</small></p><div class="reset-warning"><p>清除目前瀏覽器的闖關記錄，重新開始。</p><button id="reset-request" class="quiet">重設遊戲進度</button></div>`);};
+function infoReset(){
+ $('info-body').innerHTML='<p class="eyebrow">START A NEW JOURNEY</p><h2>重新開始這場冒險？</h2><p>將清除這個瀏覽器的姓名、五關記錄、提示與靈魂之光，回到首頁重新輸入姓名。若已有證書，請先保存圖片。</p><div class="restart-actions"><button id="cancel-reset" class="quiet">保留進度，繼續遊戲</button><button id="confirm-reset" class="primary">確定重新開始</button></div>';
+ if(!$('info-dialog').open)openDialog('info-dialog');
+}
 function enterRoom(i){if(!state.name||!$('welcome').classList.contains('hidden')){if(!start())return;}current=i;angle=0;seenWords={};filter='all';overlay=false;const l=C.levels[i];
  $('room-background').src=`assets/backgrounds/${l.scene}.webp`;$('room-background').alt=l.name+'的彩鉛奇幻場景';$('room-number').textContent=`CHAPTER 0${i+1} / FIVE TRIALS`;$('room-name').textContent=l.name;$('room-story').textContent=l.story;$('puzzle-kicker').textContent=`TRIAL 0${i+1} · 靈魂之光 ${l.letter}`;$('puzzle-title').textContent=l.short;$('puzzle-task').textContent=l.task;
  $('answer-input').value=state.drafts[i];$('answer-input').placeholder=l.placeholder;$('answer-input').inputMode=[0,2,4].includes(i)?'numeric':'text';$('answer-input').maxLength=i===1?40:20;$('answer-input').setAttribute('aria-label',l.placeholder);$('answer-feedback').textContent='';$('answer-feedback').classList.remove('correct');$('success-box').classList.add('hidden');$('answer-form').classList.remove('hidden');
@@ -85,9 +91,11 @@ function showCertificate(){
  $('certificate-hints').textContent=`本次旅程共使用 ${state.hints.reduce((a,b)=>a+b,0)} 顆星光提示（五關共 15 顆）`;
  $('certificate-date').textContent='完成日期：'+new Date(state.completedAt).toLocaleDateString('zh-TW',{timeZone:'Asia/Taipei'});
  $('certificate').classList.remove('hidden');
+ $('certificate-preview').classList.add('hidden');$('certificate-image').removeAttribute('src');
+ prepareCertificateImage();
  $('certificate').scrollIntoView({behavior:'smooth',block:'start'});
 }
-$('download-certificate').onclick=async()=>{
+async function prepareCertificateImage(){
  try{
  await document.fonts.ready;
  const canvas=document.createElement('canvas');canvas.width=1600;canvas.height=1100;
@@ -100,13 +108,19 @@ $('download-certificate').onclick=async()=>{
  line('你已解開五道封印，集齊靈魂之光，',540,34);line('帶領暮夜學院的伙伴們重返星空。',600,34);
  line($('certificate-hints').textContent,700,30);line($('certificate-date').textContent,760,26);
  line('真正的魔法，是智慧與勇氣的結合。',875,34);
- line('小益的布拉格廣場 ｜ 小益老師教你玩數學解謎',980,26);
- const seal=$('certificate-seal')||document.querySelector('.certificate-seal');if(seal.complete&&seal.naturalWidth)ctx.drawImage(seal,1260,80,160,160);
- const blob=await new Promise(resolve=>canvas.toBlob(resolve,'image/png'));if(!blob)throw Error('export');
- const url=URL.createObjectURL(blob),a=document.createElement('a');a.href=url;a.download='暮夜學院-闖關成功證書.png';a.click();setTimeout(()=>URL.revokeObjectURL(url),60000);$('certificate-status').textContent='證書已準備下載，請查看瀏覽器的下載項目。';
- }catch(e){$('certificate-status').textContent='下載暫時無法完成，請先將畫面上的證書截圖保存。';}
+ line('《小益老師教你玩數學解謎》',980,26);
+ const seal=document.querySelector('.certificate-seal');await seal.decode().catch(()=>{});if(seal.complete&&seal.naturalWidth)ctx.drawImage(seal,1260,80,160,160);
+ const dataURL=canvas.toDataURL('image/png');$('certificate-image').src=dataURL;$('certificate-preview').classList.remove('hidden');$('certificate-status').textContent='證書圖片已準備好，可以下載或長按下方圖片儲存。';return dataURL;
+ }catch(e){$('certificate-status').textContent='圖片暫時無法產生，請再按一次下載，或將畫面上的證書截圖保存。';return null;}
+}
+$('download-certificate').onclick=async()=>{
+ const url=$('certificate-image').getAttribute('src')||await prepareCertificateImage();if(!url)return;
+ const a=document.createElement('a');a.href=url;a.download='暮夜學院-闖關成功證書.png';a.click();
+ $('certificate-status').textContent='已開始下載。手機、平板也可以長按下方證書圖片儲存。';
+ $('certificate-preview').scrollIntoView({behavior:'smooth',block:'start'});
 };
 $('skip-ending').onclick=finishEnding;$('replay-ending').onclick=playEnding;$('finish-ending').onclick=()=>closeDialog('final-dialog');
 $('player-name').value=state.name;
 renderProgress();
+showIntroduction();
 })();

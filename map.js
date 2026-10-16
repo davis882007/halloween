@@ -62,5 +62,6 @@ function tick(t){requestAnimationFrame(tick);if(document.hidden||$('adventure').
  renderer.render(scene,camera);
  if(pending!==null){const i=pending;pending=null;$('map-instruction').textContent='自由選關 · 點選建築，跟著星燈出發';callback(i);}
 }
-window.AcademyMap={init,update,resize};
+function cancelTravel(){travel=null;pending=null;$('map-instruction').textContent='自由選關 · 點選建築，跟著星燈出發';}
+window.AcademyMap={init,update,resize,cancelTravel};
 })();
