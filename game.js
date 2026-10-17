@@ -109,11 +109,12 @@ function showCertificate(){
  $('certificate-date').textContent='完成日期：'+new Date(state.completedAt).toLocaleDateString('zh-TW',{timeZone:'Asia/Taipei'});
  $('certificate-character').src=character.image;$('certificate-character').alt=character.name;
  $('certificate-character-name').textContent=`${character.name}・${character.title}`;
- $('ending').classList.add('hidden');
+ // 保留過關畫面，證書緊接在下方；整個終章視窗可以一路向下捲動。
+ $('ending').classList.remove('hidden');
  $('certificate').classList.remove('hidden');
  $('certificate-preview').classList.add('hidden');$('certificate-image').removeAttribute('src');
  prepareCertificateImage();
- $('final-dialog').scrollTop=0;$('certificate').scrollIntoView({behavior:'smooth',block:'start'});
+ requestAnimationFrame(()=>$('certificate').scrollIntoView({behavior:'smooth',block:'start'}));
 }
 async function prepareCertificateImage(){
  try{

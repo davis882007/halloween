@@ -51,3 +51,28 @@
  .character-card-copy small{font-size:9px;line-height:1.55}
  .character-radar{max-height:140px}
 }
+
+/* 終章改為單一垂直捲動頁：過關畫面在上，完整證書與下載區緊接在下。 */
+.final-dialog{
+ height:95dvh;
+ max-height:95dvh;
+ overflow-x:hidden!important;
+ overflow-y:auto!important;
+ overscroll-behavior-y:contain;
+ touch-action:pan-y;
+ -webkit-overflow-scrolling:touch;
+ scrollbar-gutter:stable;
+}
+.final-dialog #ending{flex:0 0 auto}
+.final-dialog .certificate{
+ margin:28px auto 48px;
+ min-height:auto;
+ overflow:hidden;
+}
+.final-dialog .certificate-actions{position:relative;z-index:2}
+
+@media(max-width:760px){
+ .final-dialog{width:100vw;height:100dvh;max-height:100dvh;border:0;border-radius:0}
+ .final-dialog #ending{min-height:100dvh}
+ .final-dialog .certificate{margin:16px auto 36px}
+}
