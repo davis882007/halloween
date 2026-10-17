@@ -3,23 +3,24 @@
 const $=id=>document.getElementById(id),C=window.GAME_CONTENT;
 // Hotspots follow the illustration's intrinsic proportions, never a cropped background.
 const spots=[{x:20,y:34,w:29,h:23},{x:52,y:46,w:23,h:16},{x:28,y:65,w:34,h:23},{x:83,y:31,w:28,h:37},{x:52,y:20,w:27,h:27}];
-let renderer,scene,camera,walker,body,legs=[],arms=[],hat,labels=[],done=[],callback,ready=false,travel=null,last=0,position={x:63,y:75},pending=null;
+let renderer,scene,camera,walker,body,legs=[],arms=[],hat,labels=[],done=[],callback,ready=false,travel=null,last=0,position={x:63,y:75},pending=null,characterKey='starlight';
+const palettes={starlight:{primary:'#315978',secondary:'#294c76',accent:'#d3a652'},luna:{primary:'#2f877d',secondary:'#83c7b7',accent:'#d7b45c'},ember:{primary:'#b64e2d',secondary:'#e37535',accent:'#f0b84d'},mimo:{primary:'#823b78',secondary:'#d44d8b',accent:'#65a04e'}};
 const reduced=()=>matchMedia('(prefers-reduced-motion: reduce)').matches;
 function material(color){return new THREE.MeshStandardMaterial({color,roughness:.88});}
-function add(geo,color,parent,x=0,y=0,z=0){const m=new THREE.Mesh(geo,material(color));m.position.set(x,y,z);parent.add(m);return m;}
+function add(geo,color,parent,x=0,y=0,z=0,role=''){const m=new THREE.Mesh(geo,material(color));m.position.set(x,y,z);m.userData.paletteRole=role;parent.add(m);return m;}
 function makeWizard(){const T=THREE;walker=new T.Group();scene.add(walker);body=new T.Group();walker.add(body);
  for(let i=0;i<7;i++){const a=i*2.4;const ornament=add(new T.OctahedronGeometry(.075),'#e3c071',body,Math.sin(a)*.44,1.3+i*.12,Math.cos(a)*.48);ornament.scale.z=.35;}
  const shadow=add(new T.CircleGeometry(1.05,32),'#253b34',walker,0,.02,0);shadow.rotation.x=-Math.PI/2;shadow.material.transparent=true;shadow.material.opacity=.22;
- add(new T.ConeGeometry(.69,1.6,20),'#254b6b',body,0,1.6,0); // dimensional robe
- add(new T.ConeGeometry(.77,1.45,20,1,true),'#294c76',body,0,1.75,-.14);
- add(new T.CylinderGeometry(.43,.46,.16,16),'#d5b366',body,0,1.35,0);
+ add(new T.ConeGeometry(.69,1.6,20),'#254b6b',body,0,1.6,0,'primary'); // dimensional robe
+ add(new T.ConeGeometry(.77,1.45,20,1,true),'#294c76',body,0,1.75,-.14,'secondary');
+ add(new T.CylinderGeometry(.43,.46,.16,16),'#d5b366',body,0,1.35,0,'accent');
  add(new T.SphereGeometry(.51,24,16),'#f4d1ad',body,0,2.65,0);
  const hair=add(new T.SphereGeometry(.53,24,16,0,Math.PI*2,0,Math.PI*.53),'#714930',body,0,2.71,0);
  for(const x of [-.18,.18]){add(new T.SphereGeometry(.048,12,8),'#243438',body,x,2.68,.47);add(new T.SphereGeometry(.085,12,8),'#e4a795',body,x*1.5,2.5,.42);}
  hat=new T.Group();hat.position.set(0,3.05,0);body.add(hat);
- add(new T.CylinderGeometry(.96,.96,.075,28),'#254966',hat);
- const top=add(new T.ConeGeometry(.62,1.45,24),'#315978',hat,-.08,.66,0);top.rotation.z=.16;
- add(new T.CylinderGeometry(.59,.65,.14,24),'#c9a35c',hat,0,.1,0);
+ add(new T.CylinderGeometry(.96,.96,.075,28),'#254966',hat,0,0,0,'primary');
+ const top=add(new T.ConeGeometry(.62,1.45,24),'#315978',hat,-.08,.66,0,'primary');top.rotation.z=.16;
+ add(new T.CylinderGeometry(.59,.65,.14,24),'#c9a35c',hat,0,.1,0,'accent');
  add(new T.OctahedronGeometry(.13),'#ffe1a0',hat,0,.25,.53);
  for(const side of [-1,1]){
   const leg=new T.Group();leg.position.set(side*.27,1.02,0);body.add(leg);legs.push(leg);
@@ -34,7 +35,7 @@ function makeWizard(){const T=THREE;walker=new T.Group();scene.add(walker);body=
  const gem=add(new T.OctahedronGeometry(.32),'#ffe5a0',lantern);gem.material.emissive.set('#ffce62');gem.material.emissiveIntensity=1.4;
  const frame=new T.LineSegments(new T.EdgesGeometry(new T.OctahedronGeometry(.36)),new T.LineBasicMaterial({color:'#a37d39'}));lantern.add(frame);
  lantern.add(new T.PointLight('#ffcc77',2,7));
- walker.scale.setScalar(3);walker.rotation.y=.25;
+ walker.scale.setScalar(3);walker.rotation.y=.25;setCharacter(characterKey);
 }
 function choose(i){
  if(travel)pending=null;
@@ -42,13 +43,13 @@ function choose(i){
  if(!renderer||reduced()){position=end;callback(i);return;}
  const distance=Math.hypot(end.x-position.x,end.y-position.y);
  travel={from:{...position},to:end,start:performance.now(),duration:Math.max(700,Math.min(2400,distance*45)),index:i};
- $('map-instruction').textContent='星燈小魔法師正在前往'+C.levels[i].name+'…';
+ const character=window.GAME_CHARACTERS?.find(c=>c.id===characterKey);$('map-instruction').textContent=`${character?.name||'冒險伙伴'}正在前往${C.levels[i].name}…`;
 }
 function init(cb,d){callback=cb;done=d;if(ready)return;ready=true;
  $('map-flat').classList.remove('hidden');
  labels=spots.map((s,i)=>{const b=document.createElement('button');b.className='academy-hotspot';b.dataset.room=i;b.style.cssText=`left:${s.x}%;top:${s.y}%;width:${s.w}%;height:${s.h}%`;b.innerHTML=`<span class="hotspot-label"></span>`;b.onclick=()=>choose(i);$('map-labels').appendChild(b);return b;});update(done);
  try{const T=THREE;renderer=new T.WebGLRenderer({alpha:true,antialias:true});renderer.setPixelRatio(Math.min(devicePixelRatio,2));renderer.setClearColor(0,0);renderer.outputColorSpace=T.SRGBColorSpace;$('map-canvas').appendChild(renderer.domElement);renderer.domElement.setAttribute('aria-hidden','true');scene=new T.Scene();camera=new T.OrthographicCamera(-50,50,50,-50,.1,300);camera.position.set(0,90,120);camera.lookAt(0,0,0);scene.add(new T.HemisphereLight('#fff1ce','#60758b',2.7));const light=new T.DirectionalLight('#fff1d0',3);light.position.set(-20,80,70);scene.add(light);makeWizard();resize();requestAnimationFrame(tick);
- }catch(e){renderer=null;$('map-canvas').innerHTML='<img class="fallback-wizard" src="assets/characters/wizard.webp" alt="提燈的小魔法師">';}
+ }catch(e){renderer=null;const character=window.GAME_CHARACTERS?.find(c=>c.id===characterKey)||window.GAME_CHARACTERS?.[0];$('map-canvas').innerHTML=`<img class="fallback-wizard" src="${character?.image||'assets/characters/wizard.webp'}" alt="${character?.name||'冒險伙伴'}">`;}
  new ResizeObserver(resize).observe($('map-stage'));window.addEventListener('resize',resize);
 }
 function update(d){done=[...d];labels.forEach((b,i)=>{b.classList.toggle('done',done.includes(i));b.setAttribute('aria-label',`${C.levels[i].name}${done.includes(i)?'，已完成':'，開始挑戰'}`);b.querySelector('span').textContent=`${done.includes(i)?'✓':String(i+1).padStart(2,'0')} ${C.levels[i].name}`;});}
@@ -63,5 +64,6 @@ function tick(t){requestAnimationFrame(tick);if(document.hidden||$('adventure').
  if(pending!==null){const i=pending;pending=null;$('map-instruction').textContent='自由選關 · 點選建築，跟著星燈出發';callback(i);}
 }
 function cancelTravel(){travel=null;pending=null;$('map-instruction').textContent='自由選關 · 點選建築，跟著星燈出發';}
-window.AcademyMap={init,update,resize,cancelTravel};
+function setCharacter(key){characterKey=palettes[key]?key:'starlight';const palette=palettes[characterKey];if(walker)walker.traverse(object=>{const role=object.userData?.paletteRole;if(role&&object.material?.color)object.material.color.set(palette[role]);});const fallback=document.querySelector('.fallback-wizard');if(fallback){const character=window.GAME_CHARACTERS?.find(c=>c.id===characterKey);fallback.src=character?.image||'assets/characters/wizard.webp';fallback.alt=character?.name||'冒險伙伴';}}
+window.AcademyMap={init,update,resize,cancelTravel,setCharacter};
 })();
