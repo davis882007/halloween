@@ -8,16 +8,8 @@ function escapeHTML(s){return String(s).replace(/[&<>"']/g,c=>({'&':'&amp;','<':
 function save(){try{localStorage.setItem(KEY,JSON.stringify(state));}catch(e){storageOK=false;toast('這個瀏覽器無法儲存進度，請保留目前分頁繼續遊玩。');}}
 function toast(text){$('toast').textContent=text;$('toast').classList.remove('hidden');clearTimeout(toast.timer);toast.timer=setTimeout(()=>$('toast').classList.add('hidden'),4000);}
 function selectedCharacter(){return CHARACTERS.find(c=>c.id===state.character)||CHARACTERS[0];}
-function radarSVG(character){
- const cx=80,cy=68,r=43,axis=window.CHARACTER_STAT_LABELS;
- const point=(i,scale=1)=>[cx+Math.sin(i*Math.PI/3)*r*scale,cy-Math.cos(i*Math.PI/3)*r*scale];
- const polygon=scale=>Array.from({length:6},(_,i)=>point(i,scale).join(',')).join(' ');
- const valuePoints=character.stats.map((v,i)=>point(i,v/5).join(',')).join(' ');
- const labelPoints=[[80,10],[137,39],[137,106],[80,132],[23,106],[23,39]];
- return `<svg class="character-radar" viewBox="0 0 160 140" role="img" aria-label="${character.name}六大屬性雷達圖">${[.2,.4,.6,.8,1].map(s=>`<polygon points="${polygon(s)}"/>`).join('')}${Array.from({length:6},(_,i)=>{const [x,y]=point(i);return `<line x1="${cx}" y1="${cy}" x2="${x}" y2="${y}"/>`;}).join('')}<polygon class="radar-value" style="--radar-color:${character.color}" points="${valuePoints}"/>${axis.map((label,i)=>`<text x="${labelPoints[i][0]}" y="${labelPoints[i][1]}">${label} ${character.stats[i]}</text>`).join('')}</svg>`;
-}
 function renderCharacterChoices(){
- $('character-cards').innerHTML=CHARACTERS.map(c=>`<button type="button" class="character-card ${c.id===state.character?'selected':''}" data-character="${c.id}" aria-pressed="${c.id===state.character}"><img src="${c.image}" alt="${c.name}"><span class="character-card-copy"><strong>${c.name}</strong><em>${c.title}</em><small>${c.intro}</small></span>${radarSVG(c)}</button>`).join('');
+ $('character-cards').innerHTML=CHARACTERS.map(c=>`<button type="button" class="character-card ${c.id===state.character?'selected':''}" data-character="${c.id}" aria-pressed="${c.id===state.character}"><img src="${c.image}" alt="${c.name}"><span class="character-card-copy"><strong>${c.name}</strong><em>${c.title}</em><small>${c.intro}</small></span></button>`).join('');
  $('character-cards').querySelectorAll('[data-character]').forEach(button=>button.onclick=()=>{state.character=button.dataset.character;save();renderCharacterChoices();updateSelectedCharacter();chime();});
  updateSelectedCharacter();
 }

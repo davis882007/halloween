@@ -76,3 +76,26 @@
  .final-dialog #ending{min-height:100dvh}
  .final-dialog .certificate{margin:16px auto 36px}
 }
+
+/* 角色卡只保留人物與資料，各占一半；移除雷達圖區域。 */
+.character-card{grid-template-rows:1fr}
+.character-card>img{grid-area:1/1/2/2}
+.character-card-copy{
+ grid-area:1/2/2/3;
+ align-self:stretch;
+ justify-content:center;
+ padding:18px 12px 18px 0;
+}
+.character-card-copy strong{font-size:17px;line-height:1.45}
+.character-card-copy em{font-size:13px;margin:5px 0 12px}
+.character-card-copy small{font-size:12px;line-height:1.8}
+.character-radar{display:none!important}
+
+@media(max-width:520px){
+ .character-card{grid-template-rows:1fr}
+ .character-card>img{grid-area:1/1/2/2}
+ .character-card-copy{grid-area:1/2/2/3;padding:12px 7px 12px 0}
+ .character-card-copy strong{font-size:15px}
+ .character-card-copy em{font-size:11px;margin:4px 0 9px}
+ .character-card-copy small{font-size:10px;line-height:1.7}
+}
