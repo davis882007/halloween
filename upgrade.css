@@ -12,3 +12,42 @@
 
 @media(max-width:900px){.character-cards{grid-template-columns:1fr}.character-card{grid-template-columns:92px minmax(0,1fr)}.character-card>img{width:92px;height:140px}.character-radar{max-height:135px}.certificate{width:calc(100% - 24px);padding:34px 20px}.certificate-hero{gap:10px}.certificate-hero>img{width:165px;height:205px}}
 @media(max-width:520px){.character-card{grid-template-columns:80px minmax(0,1fr);padding:8px}.character-card>img{width:80px;height:124px}.character-card-copy small{font-size:9px}.character-radar{max-height:125px}.certificate{width:calc(100% - 12px);padding:30px 13px;border-width:6px}.certificate:before,.certificate:after{font-size:26px}.certificate-sparkles{font-size:17px;letter-spacing:7px}.certificate-hero{min-height:165px;gap:3px}.certificate-hero>img{width:135px;height:175px}.certificate-hero .certificate-seal{width:72px;height:72px}.certificate-hero p{font-size:11px;line-height:1.5}.certificate h2{font-size:30px!important;letter-spacing:0}.certificate-mobile-break{display:block}.certificate-story br{display:none}.certificate h3#certificate-name{width:94%;font-size:38px}.certificate p{font-size:14px;line-height:1.75}.certificate-actions{flex-direction:column}.certificate-actions button{width:100%}.certificate-preview{padding-top:16px}.certificate-preview h3{font-size:23px!important}.ending-wizard{width:170px;left:0}}
+
+/* 每張角色卡固定分成兩個等寬區域：左側放大人物，右側放介紹與雷達圖。 */
+.character-card{
+ grid-template-columns:minmax(0,1fr) minmax(0,1fr);
+ grid-template-rows:auto minmax(150px,1fr);
+ column-gap:16px;
+ min-height:300px;
+ padding:16px;
+}
+.character-card>img{
+ grid-area:1/1/3/2;
+ width:100%;
+ height:100%;
+ min-height:260px;
+ max-height:300px;
+ object-fit:contain;
+ object-position:center;
+ align-self:stretch;
+ justify-self:stretch;
+}
+.character-card-copy{grid-area:1/2/2/3;padding-right:24px}
+.character-card-copy strong{font-size:15px}
+.character-card-copy em{font-size:12px}
+.character-card-copy small{font-size:11px;line-height:1.65}
+.character-radar{grid-area:2/2/3/3;align-self:end;width:100%;max-height:165px}
+
+@media(max-width:900px){
+ .character-card{grid-template-columns:minmax(0,1fr) minmax(0,1fr);min-height:310px}
+ .character-card>img{width:100%;height:100%;min-height:270px;max-height:310px}
+}
+@media(max-width:520px){
+ .character-card{grid-template-columns:minmax(0,1fr) minmax(0,1fr);grid-template-rows:auto minmax(135px,1fr);column-gap:10px;min-height:270px;padding:10px}
+ .character-card>img{width:100%;height:100%;min-height:235px;max-height:275px}
+ .character-card-copy{padding-right:18px}
+ .character-card-copy strong{font-size:13px}
+ .character-card-copy em{font-size:10px}
+ .character-card-copy small{font-size:9px;line-height:1.55}
+ .character-radar{max-height:140px}
+}
