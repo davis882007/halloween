@@ -99,3 +99,113 @@
  .character-card-copy em{font-size:11px;margin:4px 0 9px}
  .character-card-copy small{font-size:10px;line-height:1.7}
 }
+
+/* 提升主遊戲、關卡與提示文字的閱讀尺寸。 */
+.adventure{font-size:16px}
+.map-heading h1{font-size:clamp(32px,3vw,40px)}
+.chapter-card b{font-size:14px}
+.chapter-card small{font-size:12px;line-height:1.55}
+.guide-name{font-size:12px}
+.guide h2{font-size:25px}
+.guide>p:not(.eyebrow):not(.guide-name){font-size:15px;line-height:1.85}
+.guide .primary,.final-button{font-size:15px}
+.soul-title{font-size:14px}
+.room-story>p:last-child{font-size:15px;line-height:1.9}
+.puzzle-heading h2{font-size:clamp(31px,3vw,38px)}
+.puzzle-heading>p:last-child{font-size:17px;line-height:1.85}
+#puzzle-body{font-size:16px}
+#answer-label,.field-label{font-size:15px}
+.answer-row input{font-size:20px}
+.answer-row .primary{font-size:15px}
+.feedback,.hint-text{font-size:15px}
+.hint-bar .text-btn{font-size:15px}
+#hint-count{font-size:13px}
+.puzzle-caption{font-size:13px}
+.success-box h3{font-size:25px}
+.success-box p{font-size:15px}
+.success-box .primary{font-size:14px}
+.info-dialog p,.info-dialog li{font-size:16px}
+
+/* 第一關：仿電子鐘的七段顯示器，並保留可讀的文字標示。 */
+.target-display{
+ flex:0 0 auto;
+ display:flex;
+ flex-direction:column;
+ align-items:center;
+ gap:10px;
+}
+.target-display-label{
+ color:var(--ink);
+ font-size:16px;
+ font-weight:700;
+ letter-spacing:1px;
+}
+.digital-clock{
+ display:grid;
+ place-items:center;
+ width:140px;
+ min-height:190px;
+ padding:20px;
+ border:3px solid #26383b;
+ border-radius:16px;
+ background:linear-gradient(145deg,#030607,#10191c);
+ box-shadow:inset 0 0 24px #000c,0 8px 25px #10252830;
+}
+.segment-demo .digital-clock .segments{
+ display:block!important;
+ position:relative;
+ width:88px;
+ height:142px;
+ min-width:88px;
+ transform:none;
+}
+.digital-clock .seg{
+ border-radius:1px;
+ background:#263334;
+}
+.digital-clock .seg.h{
+ left:13px;
+ width:62px;
+ height:12px;
+ clip-path:polygon(9% 0,91% 0,100% 50%,91% 100%,9% 100%,0 50%);
+}
+.digital-clock .seg.v{
+ width:12px;
+ height:51px;
+ clip-path:polygon(50% 0,100% 9%,100% 91%,50% 100%,0 91%,0 9%);
+}
+.digital-clock .seg.s3{top:0}
+.digital-clock .seg.s4{top:65px}
+.digital-clock .seg.s5{bottom:0}
+.digital-clock .seg.s1{left:0;top:9px}
+.digital-clock .seg.s2{left:0;bottom:9px}
+.digital-clock .seg.s6{right:0;top:9px}
+.digital-clock .seg.s7{right:0;bottom:9px}
+.digital-clock .seg.on{
+ background:#f7fff6;
+ box-shadow:0 0 10px #e8fff2,0 0 25px #8ff0c0;
+}
+
+@media(max-width:760px){
+ .map-heading h1{font-size:29px}
+ .guide h2{font-size:25px}
+ .guide>p:not(.eyebrow):not(.guide-name){font-size:15px}
+ .room-story>p:last-child{font-size:14px}
+ .puzzle-heading h2{font-size:29px}
+ .puzzle-heading>p:last-child{font-size:16px}
+ .segment-demo{align-items:center}
+ .target-display-label{font-size:15px}
+ .digital-clock{width:126px;min-height:174px;padding:15px}
+}
+
+@media(max-width:420px){
+ .chapter-card b{font-size:13px;white-space:normal}
+ .chapter-card small{font-size:11px}
+ .guide>p:not(.eyebrow):not(.guide-name){max-width:none}
+ .puzzle-heading h2{font-size:27px}
+ .puzzle-heading>p:last-child{font-size:15px}
+ .answer-row input{font-size:19px}
+ .segment-demo{align-items:flex-start;overflow-x:auto}
+ .target-display{position:sticky;right:0;background:#eaece2;padding-left:6px}
+ .digital-clock{width:106px;min-height:154px;padding:8px}
+}
