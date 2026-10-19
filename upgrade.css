@@ -205,7 +205,12 @@
  .puzzle-heading h2{font-size:27px}
  .puzzle-heading>p:last-child{font-size:15px}
  .answer-row input{font-size:19px}
- .segment-demo{align-items:flex-start;overflow-x:auto}
- .target-display{position:sticky;right:0;background:#eaece2;padding-left:6px}
  .digital-clock{width:106px;min-height:154px;padding:8px}
+}
+
+/* 窄螢幕將參考電子鐘排在範例下方，避免覆蓋牌卡與等號後的數字。 */
+@media(max-width:1050px){
+ .segment-demo{flex-direction:column;align-items:stretch;gap:18px;overflow:visible}
+ .segment-demo .cards-examples{flex:auto;min-width:0}
+ .target-display{position:static;align-self:center;padding:0}
 }
