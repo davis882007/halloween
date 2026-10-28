@@ -209,6 +209,7 @@
 }
 
 /* 窄螢幕將參考電子鐘排在範例下方，避免覆蓋牌卡與等號後的數字。 */
+.numbered-clock{display:block;width:160px;max-width:100%;height:auto;object-fit:contain}
 @media(max-width:1050px){
  .segment-demo{flex-direction:column;align-items:stretch;gap:18px;overflow:visible}
  .segment-demo .cards-examples{flex:auto;min-width:0}
